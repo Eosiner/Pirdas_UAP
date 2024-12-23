@@ -8,51 +8,128 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
+            padding: 0;
+            background-color: #CB997E; /* Warm Beige */
+            color: #333;
         }
-
+        
+        header {
+            background-color: #EDDCD2; /* Light Warm Beige */
+            color: rgb(0, 0, 0);
+            text-align: center;
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        
         .container {
             display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            margin-bottom: 30px;
+            justify-content: center;
+            align-items: center;
+            gap: 0;
+            margin: 0 auto 30px;
+            max-width: 1000px;
         }
-
+        
         #sensorData {
             margin-top: 20px;
         }
-
-        #relayStatus {
+        
+        #relayStatus,
+        #autoModeStatus {
             margin-top: 10px;
             font-weight: bold;
+            color: #0a0a0a;
         }
-
-        #chartContainer {
-            margin-top: 20px;
-            text-align: center;
+        
+        .section {
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
         }
-
+        
+        .section h2 {
+            margin-top: 0;
+            color: #000000; /* Light Soft White */
+        }
+        
         canvas {
             width: 100% !important;
-            height: 300px !important;
+            height: 100% !important;
         }
-
+        
         .button {
             padding: 10px 20px;
-            margin: 10px;
+            margin: 10px 5px;
             font-size: 16px;
             cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
         }
-
+        
         .on {
-            background-color: green;
-            color: white;
+            background-color: #DDBEA9; /* Warm Cream */
+            color: rgb(0, 0, 0);
         }
-
+        
+        .on:hover {
+            background-color: #C69C6D; /* Slightly Darker Cream */
+        }
+        
         .off {
-            background-color: red;
-            color: white;
+            background-color: #A5A58D; /* Grayish Olive */
+            color: rgb(0, 0, 0);
         }
+        
+        .off:hover {
+            background-color: #8A8D74; /* Darker Olive */
+        }
+        
+        .chart-container {
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 15px 15px 30px;
+            flex: 1;
+            min-width: 235px;
+            max-width: 235px;
+            text-align: center;
+            height: 235px;
+            margin: 10px;
+        }
+        
+        .chart-container h3 {
+            margin-top: 10px;
+            color: #B7B7A4; /* Muted Greenish Grey */
+        }
+        
+        .moisture-line-container {
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+        
+        @media (max-width: 768px) {
+            .chart-container {
+                min-width: 200px;
+                max-width: 200px;
+                height: 200px;
+            }
+        }
+        
+
     </style>
     <!-- Include Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -60,49 +137,61 @@
 </head>
 
 <body>
-    <h1>Relay Control</h1>
-    <!-- Tombol untuk mengatur mode otomatis/manual -->
-    <button id="autoModeButton" class="button on" onclick="setAutoMode(true)">
-        Enable Auto Mode
-    </button>
-    <button id="manualModeButton" class="button off" onclick="setAutoMode(false)">
-        Enable Manual Mode
-    </button>
-    <div id="autoModeStatus" class="status">Mode: Auto</div>
+    <header>
+        <h1>Sensor Data and Relay Control</h1>
+    </header>
 
-    <button id="relayOn" class="button on" onclick="controlRelay(1)">
-        Turn Pump ON
-    </button>
-    <button id="relayOff" class="button off" onclick="controlRelay(0)">
-        Turn Pump OFF
-    </button>
-    <div id="relayStatus" class="status">Pump is OFF</div>
+    <div class="section">
+        <h2>Relay Control</h2>
+        <button id="autoModeButton" class="button on" onclick="setAutoMode(true)">
+            Enable Auto Mode
+        </button>
+        <button id="manualModeButton" class="button off" onclick="setAutoMode(false)">
+            Enable Manual Mode
+        </button>
+        <div id="autoModeStatus" class="status">Mode: Auto</div>
 
-    <h1>Sensor Data</h1>
-    <p>Soil Moisture: <span id="soil_moisture">--</span>%</p>
-    <p>Temperature: <span id="temperature">--</span>°C</p>
-    <p>Humidity: <span id="humidity">--</span>%</p>
+        <button id="relayOn" class="button on" onclick="controlRelay(1)">
+            Turn Pump ON
+        </button>
+        <button id="relayOff" class="button off" onclick="controlRelay(0)">
+            Turn Pump OFF
+        </button>
+        <div id="relayStatus" class="status">Pump is OFF</div>
+    </div>
 
-    <!-- Container for charts -->
+    <div class="section">
+        <h2>Sensor Data</h2>
+        <p>Soil Moisture: <span id="soil_moisture">--</span>%</p>
+        <p>Temperature: <span id="temperature">--</span>°C</p>
+        <p>Humidity: <span id="humidity">--</span>%</p>
+    </div>
+
     <div class="container">
-        <!-- Canvas for Soil Moisture -->
-        <div id="chartContainer">
+        <!-- Chart for Soil Moisture -->
+        <div class="chart-container">
             <canvas id="soilMoistureChart"></canvas>
             <h3>Soil Moisture</h3>
         </div>
-        <!-- Canvas for Temperature -->
-        <div id="chartContainer">
+        <!-- Chart for Temperature -->
+        <div class="chart-container">
             <canvas id="temperatureChart"></canvas>
             <h3>Temperature</h3>
         </div>
-        <!-- Canvas for Humidity -->
-        <div id="chartContainer">
+        <!-- Chart for Humidity -->
+        <div class="chart-container">
             <canvas id="humidityChart"></canvas>
             <h3>Humidity</h3>
         </div>
     </div>
 
-    <!-- Include the external JS file -->
+    <!-- Chart for Moisture Line Chart -->
+    <div class="moisture-line-container">
+        <canvas id="moistureLineChart"></canvas>
+        <h3>Soil Moisture (Line Chart)</h3>
+    </div>
+
+    <!-- External script -->
     <script src="script.js"></script>
 </body>
 
